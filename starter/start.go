@@ -50,6 +50,10 @@ func (w *cle) GetVariable(s string) (parser.Variable, error) {
 	return v, nil
 }
 
+func (w *cle) ErrorMessage(err error) {
+	fmt.Println(err)
+}
+
 func CommandLine(f exchange.Exchange) parser.Communicator {
 	cl := &cle{}
 	cl.vm = make(map[string]parser.Variable)
@@ -62,29 +66,37 @@ func Run(w parser.Communicator, f exchange.Exchange) error {
 		var b []byte = make([]byte, 128)
 		l, _ := w.Read(b)
 		b = b[:l]
+		if strings.Compare(string(b), "exit") == 0 {
+			w.Write([]byte("byebye"))
+			break
+		}
 		t, err := lexer.Lexer(string(b))
-		fmt.Println(t)
 		if err != nil {
-			fmt.Println(t, err)
+			w.ErrorMessage(err)
 			continue
 		}
 		p, err := parser.Parse(t, w)
 		if p == nil {
 			if err != nil {
-				fmt.Println(err)
+				w.ErrorMessage(err)
 				continue
 			} else {
 				continue
 			}
 		}
 
-		err = p.Evaluate(w, f)
 		if err != nil {
-			fmt.Println(err)
+			w.ErrorMessage(err)
 			continue
 		}
 
+		err = p.Evaluate(w, f)
+		if err != nil {
+			w.ErrorMessage(err)
+			continue
+		}
 	}
+	return nil
 }
 
 //Execute is a lightweight version with limited functions
@@ -137,4 +149,8 @@ func (e *execute) AddVariable(string, parser.Variable) {
 }
 func (e *execute) GetVariable(string) (parser.Variable, error) {
 	return parser.Variable{}, errors.New("You are not allowed to assign Variables here")
+}
+
+func (e *execute) ErrorMessage(error) {
+	return
 }

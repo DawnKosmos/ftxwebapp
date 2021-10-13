@@ -52,8 +52,9 @@ func (l *lexerError) Error() string {
 	return fmt.Sprintf("Text: %s, Error: %v + %s", l.input, l.err, l.errmessage)
 }
 
+//Lexer converts an input to a Token Array
 func Lexer(input string) (t []Token, err error) {
-	in := strings.Split(input, " ")
+	in := strings.Split(input, " ") //tokens are seperated with whitespaces. Only exeptions are function, here its forbidden to seperate
 
 	for _, s := range in {
 		if len(s) == 0 {
@@ -87,9 +88,9 @@ func Lexer(input string) (t []Token, err error) {
 			}
 
 			if len(s) > 6 {
-				if s[:4] == "func" {
-					t = append(t, Token{FUNC, "func"})
-					t = append(t, lexFunc([]byte(s[4:]))...)
+				if s[:5] == "func(" {
+					t = append(t, Token{FUNC, "func"}, Token{LBRACKET, "("})
+					t = append(t, lexFunc([]byte(s[5:]))...)
 					continue
 				}
 			}
@@ -139,7 +140,6 @@ func Lexer(input string) (t []Token, err error) {
 				t = append(t, Token{FLOAT, s})
 				continue
 			}
-			fmt.Println(string(s))
 			t = append(t, lexVariable([]byte(s))...)
 		}
 	}
@@ -152,8 +152,6 @@ func lexFunc(s []byte) []Token {
 	var tk []Token
 	for _, v := range s {
 		switch v {
-		case '(':
-			tk = append(tk, Token{LBRACKET, ""})
 		case ')':
 			tk = append(tk, Token{VARIABLE, string(temp)}, Token{RBRACKET, ""})
 			temp = []byte("")
@@ -168,6 +166,7 @@ func lexFunc(s []byte) []Token {
 	return tk
 }
 
+//LexVariable lexes functions e.g. a(xrp-buy,5,10)
 func lexVariable(s []byte) []Token {
 	var temp []byte
 	var tk []Token

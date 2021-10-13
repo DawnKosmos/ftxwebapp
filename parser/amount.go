@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"strings"
+
 	"github.com/DawnKosmos/ftxwebapp/exchange"
 )
 
@@ -36,7 +38,8 @@ func (a *Amount) Evaluate(f exchange.Exchange) (float64, error) {
 		return az / m, nil
 	case POSITIONSIZE:
 		pz, err := f.OpenPositions()
-		return pz[a.Ticker].PositionSize, err
+		tick := strings.ToUpper(a.Ticker)
+		return pz[tick].PositionSize, err
 	}
 	return 0, nil
 }

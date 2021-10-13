@@ -19,7 +19,7 @@ func ParseVariable(v Variable, tk []lexer.Token) ([]lexer.Token, error) {
 		if !ok {
 			return tk, nerr(empty, "Error Parse Variable, Variable not existing")
 		}
-		return append(nk, tk[1:]...), nil
+		return append(nk, tk...), nil
 	}
 
 	return tk, nerr(empty, "Error while Parsing a Variable Something went wrong")

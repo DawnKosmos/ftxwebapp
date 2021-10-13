@@ -68,15 +68,15 @@ func ParsePrice(tk []lexer.Token) (p Price, err error) {
 	}
 
 	switch tk[0].Type {
-	case lexer.FLOAT:
+	case lexer.FLOAT: // 30000 places order at $30000
 		p.Type = PRICE
-	case lexer.DFLOAT:
+	case lexer.DFLOAT: // -300 places order $300 below the marketprice
 		p.Type = DIFFERENCE
-	case lexer.PERCENT:
+	case lexer.PERCENT: // 2% places order 2% below the marketprice
 		p.Type = DIFFERENCE
-	case lexer.MARKET:
+	case lexer.MARKET: // -market market buys
 		p.Type = MARKET
-	case lexer.FLAG:
+	case lexer.FLAG: // -l -le for laddered Orders
 		err = ParsePriceFlag(&p, tk[0].Content, tk[1:])
 		return p, err
 	default:
@@ -91,15 +91,16 @@ func ParsePrice(tk []lexer.Token) (p Price, err error) {
 	return p, nil
 }
 
+//ParsePriceFlag parses laddered Order
 func ParsePriceFlag(p *Price, flag string, tl []lexer.Token) (err error) {
 	if len(tl) > 3 {
 		return nerr(empty, "Parse Price Flag Error, Not Enough Arguments")
 	}
 
 	switch flag {
-	case "l":
+	case "l": //laddered Order
 		p.IsLaddered = [2]bool{true, false}
-	case "le":
+	case "le": //exponential laddered Order
 		p.IsLaddered = [2]bool{true, true}
 	default:
 		return errors.New("This Flag is not supported: " + flag)
@@ -109,7 +110,7 @@ func ParsePriceFlag(p *Price, flag string, tl []lexer.Token) (err error) {
 		return errors.New("Not enough Arguments for a laddered order")
 	}
 
-	if tl[0].Type == lexer.FLOAT {
+	if tl[0].Type == lexer.FLOAT { //First Value sets up how many orders are placed
 		num, err := strconv.Atoi(tl[0].Content)
 		if err != nil {
 			return err
@@ -118,14 +119,13 @@ func ParsePriceFlag(p *Price, flag string, tl []lexer.Token) (err error) {
 		if num > 25 || num < 2 {
 			return nerr(empty, "Error Parse Price Flag, number of seperation to high, max is 25")
 		}
-
 		p.Values[0] = float64(num)
 	} else {
-		return nerr(empty, fmt.Sprintf("Error Parse Price Flage, %s must be a Float ", tl[0].Content))
+		return nerr(empty, fmt.Sprintf("Error Parse Price Flage, First Value %s must be a Number ", tl[0].Content))
 	}
 
 	if tl[1].Type != tl[2].Type {
-		return nerr(empty, "Values 1 and 2 must be from same type")
+		return nerr(empty, "Values 2 and 3 Arguments must be from same type")
 	}
 
 	switch tl[1].Type {
@@ -199,7 +199,7 @@ func (p *Price) EvaluatePrice(f exchange.Exchange, sides string, ticker string, 
 	}
 
 	p1, p2 := p.Values[1], p.Values[2]
-	plo := GetPricesLadderedOrder(p.IsLaddered[1], p.Values[0], p1, p2)
+	plo := GetPricesLadderedOrder(p.IsLaddered[1], p.Values[0], p1, p2) //provides an arry of [2]float64 a pair saves the orders price and position size
 
 	for _, v := range plo {
 		so, err := f.SetOrder(side, ticker, v[0], size*v[1], ro)
@@ -237,18 +237,20 @@ func (p *Price) EvaluateDifference(f exchange.Exchange, side string, ticker stri
 	fatalErrors := make(chan error)
 	wgDone := make(chan bool)
 
-	for _, v := range plo {
-		wg.Add(1)
+	out := make([][]byte, len(plo), len(plo))
+	fmt.Println(len(out))
 
-		go func() {
+	for i, v := range plo {
+		wg.Add(1)
+		go func(ii int, vv [2]float64) {
 			defer wg.Done()
-			so, err := f.SetOrder(ss, ticker, v[0], size*v[1], ro)
+			so, err := f.SetOrder(ss, ticker, vv[0], size*vv[1], ro)
 			if err != nil {
 				fatalErrors <- err
 			}
 			s := fmt.Sprintf("Placed: %s %s %f %f ", so.Side, so.Ticker, so.Size, so.Price)
-			ws.Write([]byte(s))
-		}()
+			out[ii] = []byte(s)
+		}(i, v)
 		/*
 			so, err := f.SetOrder(ss, ticker, v[0], size*v[1], ro)
 			if err != nil {
@@ -258,14 +260,17 @@ func (p *Price) EvaluateDifference(f exchange.Exchange, side string, ticker stri
 			ws.Write([]byte(s))
 		*/
 	}
-
 	//IF
 	go func() {
 		wg.Wait()
+		for _, v := range out {
+			ws.Write(v)
+		}
 		close(wgDone)
 	}()
 	switch {
 	case <-wgDone:
+
 		break
 	case nil != <-fatalErrors:
 		close(fatalErrors)

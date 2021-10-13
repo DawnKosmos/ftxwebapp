@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
+
+  <title>FTX CLE</title>
+</head>
+
+
+<div class="w3-row">
+  <font face = "WildWest" size = "6">&nbsp;FTX Command Line Execution</font>
+  <br/>
+
+<div class="w3-card-4 w3-border w3-threequarter w3-round-large w3-light-grey">
+    <textarea id="output" readonly class="w3-black w3-small" name="name" rows="10" style="margin-top:4px;margin-left:2.5%;width: 95%; resize:none;"> </textarea>
+    <input id = "input" autofocus class="w3-black" type="text" style="margin-top:4px;margin-left:2.5%;width: 95%; resize:none;" />  <hr>
+</div>
+
+<script>
+    var input = document.getElementById("input");
+    var output = document.getElementById("output");
+    var socket = new WebSocket("ws://127.0.0.1:8080/gws/{{.}}");
+
+    socket.onopen = function () {
+        output.value += "Status: Connected\n";
+    
+    };
+
+    socket.onmessage = function (e) {
+        output.value += ">" + e.data + "\n";
+        output.scrollTop = output.scrollHeight;
+    };
+
+
+ input.addEventListener("keydown", function(event) {
+            if (event.code === "Enter") {
+                if (input.value === ""){
+                    return false;
+                } else {
+                    sendMessage();
+                }
+            }
+        })
+
+ function sendMessage() {
+        socket.send(input.value);
+        input.value = "";
+    };
+</script>

@@ -23,7 +23,7 @@ func ParseCancel(tk []lexer.Token) (p Parser, err error) {
 		return &cancle, nil
 	}
 
-	for _, v := range tk[1:] {
+	for _, v := range tk {
 		switch v.Type {
 		case lexer.SIDE:
 			if v.Content == "buy" {
