@@ -43,7 +43,7 @@ func (f *FTX) SetTriggerOrder(side bool, ticker string, price float64, size floa
 		Ticker:     ticker,
 		Side:       side,
 		Size:       e.Result.Size,
-		Price:      e.Result.OrderPrice,
+		Price:      e.Result.TriggerPrice,
 		ReduceOnly: reduceOnly,
 		Created:    e.Result.CreatedAt,
 	}
@@ -124,6 +124,7 @@ func (f *FTX) FreeCollateral() (float64, error) {
 
 func (f *FTX) OpenPositions() (map[string]exchange.Position, error) {
 	e, err := f.f.GetPosition()
+
 	var eo map[string]exchange.Position = make(map[string]exchange.Position)
 	for _, v := range e {
 		temp := exchange.Position{
@@ -137,6 +138,32 @@ func (f *FTX) OpenPositions() (map[string]exchange.Position, error) {
 		eo[v.Future] = temp
 	}
 	return eo, err
+}
+
+func (f *FTX) OpenOrders(side bool, ticker string) ([]exchange.Order, error) {
+	ss := "sell"
+	if side {
+		ss = "buy"
+	}
+	o, err := f.f.GetOpenOrders(ticker)
+	var out []exchange.Order
+	if err != nil {
+		return out, err
+	}
+	for _, v := range o {
+		if v.Side == ss {
+			temp := exchange.Order{
+				Ticker:     v.Ticker,
+				Side:       v.Side,
+				Size:       v.Size,
+				Price:      v.Price,
+				ReduceOnly: v.ReduceOnly,
+				Created:    v.CreatedAt,
+			}
+			out = append(out, temp)
+		}
+	}
+	return out, nil
 }
 
 /*

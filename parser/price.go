@@ -73,7 +73,7 @@ func ParsePrice(tk []lexer.Token) (p Price, err error) {
 	case lexer.DFLOAT: // -300 places order $300 below the marketprice
 		p.Type = DIFFERENCE
 	case lexer.PERCENT: // 2% places order 2% below the marketprice
-		p.Type = DIFFERENCE
+		p.Type = PERCENTPRICE
 	case lexer.MARKET: // -market market buys
 		p.Type = MARKET
 	case lexer.FLAG: // -l -le for laddered Orders
@@ -238,7 +238,6 @@ func (p *Price) EvaluateDifference(f exchange.Exchange, side string, ticker stri
 	wgDone := make(chan bool)
 
 	out := make([][]byte, len(plo), len(plo))
-	fmt.Println(len(out))
 
 	for i, v := range plo {
 		wg.Add(1)

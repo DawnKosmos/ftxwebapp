@@ -17,6 +17,8 @@ const (
 type Exchange interface {
 	//SetOrder set an Order, reduceOnly optional, default is false
 	SetOrder(side bool, ticker string, price float64, size float64, reduceOnly bool) (Order, error)
+
+	OpenOrders(side bool, ticker string) ([]Order, error)
 	//SetTriggerOrder set an TriggerOrder, reduceOnly optional, default is true
 	SetTriggerOrder(side bool, ticker string, price float64, size float64, orderType string, reduceOnly bool) (TriggerOrder, error)
 	//MarketPrice return the Market Price of the asked Ticker

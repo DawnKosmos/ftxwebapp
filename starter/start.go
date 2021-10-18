@@ -151,6 +151,6 @@ func (e *execute) GetVariable(string) (parser.Variable, error) {
 	return parser.Variable{}, errors.New("You are not allowed to assign Variables here")
 }
 
-func (e *execute) ErrorMessage(error) {
-	return
+func (e *execute) ErrorMessage(err error) {
+	e.Write([]byte(err.Error()))
 }

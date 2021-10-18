@@ -84,7 +84,7 @@ func Parse(tk []lexer.Token, c Communicator) (Parser, error) {
 	case lexer.SIDE: // buy, sell
 		o, err = ParseOrder(nk[0].Content, nk[1:])
 	case lexer.STOP: //stop
-	//	o, err = ParseStop(nk[0].Content, nk[1:])
+		o, err = ParseStop(nk[1:])
 	case lexer.CANCEL: //cancel
 		o, err = ParseCancel(nk[1:])
 	case lexer.FUNDINGPAYS: //fpays

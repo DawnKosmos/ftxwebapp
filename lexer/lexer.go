@@ -31,6 +31,7 @@ const (
 	POSITION                      // -position
 	FUNDINGRATES                  //fundingrates
 	ACCOUNT
+	PRICEORDER
 )
 
 type Token struct {
@@ -103,6 +104,8 @@ func Lexer(input string) (t []Token, err error) {
 				} else {
 					ss := s[1:]
 					switch ss {
+					case "po":
+						t = append(t, Token{PRICEORDER, "1.0"})
 					case "low", "high", "open", "close":
 						t = append(t, Token{SOURCE, ss})
 					case "position":
