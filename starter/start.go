@@ -99,33 +99,71 @@ func Run(w parser.Communicator, f exchange.Exchange) error {
 	return nil
 }
 
-//Execute is a lightweight version with limited functions
-func Execute(w io.Writer, r io.Reader, f exchange.Exchange) error {
-	ex := newExecute(w, r)
 
-	buff := make([]byte, 1024)
-	l, _ := ex.Read(buff)
-	buff = buff[:l]
 
-	commands := strings.Split(string(buff), "\n")
-	for _, v := range commands {
-		tk, err := lexer.Lexer(v)
+type Sexe struct{
+	w io.Writer
+}
+
+func NewSexe(w io.Writer)*Sexe{
+	return &Sexe{w}
+}
+
+func (s *Sexe) Write(p []byte) (n int, err error) {
+	return  fmt.Println(string(p))
+}
+
+func (s *Sexe) Read(p []byte) (n int, err error) {
+	panic("implement me")
+}
+
+func (s *Sexe) AddVariable(s2 string, variable parser.Variable) {
+}
+
+func (s *Sexe) GetVariable(s2 string) (parser.Variable, error) {
+	return parser.Variable{}, errors.New("You are not allowed to assign Variables here")}
+
+func (s *Sexe) ErrorMessage(err error) {
+	fmt.Println(err)
+}
+
+func ExecuteOrders(w io.Writer, commands string, f exchange.Exchange) error{
+	ex := NewSexe(w)
+
+	if len(commands) > 2048{
+		err := errors.New("To many commands")
+		ex.ErrorMessage(err)
+		return  err
+	}
+
+
+	commandList := strings.Split(commands,"\n")
+
+	for _, v := range commandList{
+		tl, err := lexer.Lexer(v)
 		if err != nil {
-			return err
+			ex.ErrorMessage(err)
+			continue
 		}
-
-		p, err := parser.Parse(tk, ex)
+		p, err := parser.Parse(tl, ex)
 		if err != nil {
-			return err
+			ex.ErrorMessage(err)
+			continue
 		}
-
 		err = p.Evaluate(ex, f)
 		if err != nil {
-			return err
+			ex.ErrorMessage(err)
+			continue
 		}
+
 	}
+
 	return nil
 }
+
+
+//Execute is a lightweight version with limited functions
+
 
 type execute struct {
 	w io.Writer

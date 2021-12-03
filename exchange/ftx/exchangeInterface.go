@@ -113,6 +113,7 @@ func (f *FTX) FundingRates(ticker string, starttime int64, endtime int64) ([]exc
 		}
 		eo = append(eo, temp)
 	}
+
 	return eo, err
 }
 

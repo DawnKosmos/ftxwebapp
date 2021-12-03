@@ -15,36 +15,36 @@ type Cancel struct {
 
 func ParseCancel(tk []lexer.Token) (p Parser, err error) {
 
-	var cancle Cancel
-	cancle.Side = exchange.ALL
-	cancle.Ticker = make([]string, 0)
+	var cancel Cancel
+	cancel.Side = exchange.ALL
+	cancel.Ticker = make([]string, 0)
 
 	if len(tk) == 0 {
-		return &cancle, nil
+		return &cancel, nil
 	}
 
 	for _, v := range tk {
 		switch v.Type {
 		case lexer.SIDE:
 			if v.Content == "buy" {
-				cancle.Side = exchange.BUY
+				cancel.Side = exchange.BUY
 			} else {
-				cancle.Side = exchange.SELL
+				cancel.Side = exchange.SELL
 			}
 		case lexer.FLAG:
 			switch v.Content {
 			case "stop":
-				cancle.triggerOrder = true
+				cancel.triggerOrder = true
 			default:
 				return nil, nerr(empty, fmt.Sprintf("Error Parsing Cancel, Invalid flag %s", v.Content))
 			}
 		case lexer.VARIABLE:
-			cancle.Ticker = append(cancle.Ticker, v.Content)
+			cancel.Ticker = append(cancel.Ticker, v.Content)
 		default:
 			return nil, nerr(empty, fmt.Sprintf("Error Parsing Cancel, Invalid Type %d %s", v.Type, v.Content))
 		}
 	}
-	return &cancle, nil
+	return &cancel, nil
 }
 
 func (c *Cancel) Evaluate(w Communicator, f exchange.Exchange) error {
